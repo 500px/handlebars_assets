@@ -10,6 +10,16 @@ module HandlebarsAssets
         context.call('Handlebars.precompile', *args)
       end
 
+      def context_for(template, extra = "")
+        ExecJS.compile("#{runtime}; #{extra}; var template = Handlebars.template(#{precompile(template)})")
+      end
+
+      def render(template, *args)
+        locals = args.last.is_a?(Hash) ? args.pop : {}
+        extra = args.first.to_s
+        context_for(template, extra).call("template", locals.to_json)
+      end
+
       protected
 
       attr_writer :source
@@ -25,16 +35,6 @@ module HandlebarsAssets
           end
         end
         source
-      end
-
-      def context_for(template, extra = "")
-        ExecJS.compile("#{runtime}; #{extra}; var template = Handlebars.template(#{precompile(template)})")
-      end
-
-      def render(template, *args)
-        locals = args.last.is_a?(Hash) ? args.pop : {}
-        extra = args.first.to_s
-        context_for(template, extra).call("template", locals)
       end
 
       private
