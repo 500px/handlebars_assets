@@ -1,4 +1,5 @@
 require 'action_view/template/handlers/handlebars'
+require 'handlebars_assets/tilt_handlebars'
 
 module HandlebarsAssets
   class Engine < ::Rails::Engine

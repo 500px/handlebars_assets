@@ -21,7 +21,6 @@ module HandlebarsAssets
 
     def evaluate(scope, locals, &block)
       template_path = TemplatePath.new(scope)
-      puts scope
       scope.instance_variable_set :@virtual_path, template_path.name
 
       # TODO: I think this could be removed by registering differently (will test in future)
