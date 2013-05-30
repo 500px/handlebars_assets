@@ -7,11 +7,16 @@ module HandlebarsAssets
     class << self
 
       def precompile(*args)
+        # TODO: this should be cached probably...; why not just Handlebars['template_name'] (if exists) ???
         context.call('Handlebars.precompile', *args)
       end
 
-      def context_for(template, extra = "")
-        ExecJS.compile("#{runtime}; #{extra}; var template = Handlebars.template(#{precompile(template)})")
+      def runtime_context
+        @runtime_context ||= ExecJS.compile("#{runtime_source};")
+      end
+
+      def context
+        @context ||= ExecJS.compile(apply_patches_to_source)
       end
 
       def render(template, *args)
@@ -39,10 +44,6 @@ module HandlebarsAssets
 
       private
 
-      def context
-        @context ||= ExecJS.compile(apply_patches_to_source)
-      end
-
       def source
         @source ||= path.read
       end
@@ -55,7 +56,7 @@ module HandlebarsAssets
         patch_path.join(patch_file).read
       end
 
-      def runtime
+      def runtime_source
         @runtime ||= runtime_path.read
       end
 
