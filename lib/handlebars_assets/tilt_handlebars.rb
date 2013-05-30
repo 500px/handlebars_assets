@@ -7,7 +7,7 @@ module HandlebarsAssets
     # amount of whitespace on the first line of the string.
     # Leaves _additional_ indentation on later lines intact.
     def unindent(heredoc)
-      heredoc.gsub /^#{heredoc[/\A\s*/]}/, ''
+      heredoc.gsub(/^#{heredoc[/\A\s*/]}/, '')
     end
   end
 
@@ -21,50 +21,37 @@ module HandlebarsAssets
 
     def evaluate(scope, locals, &block)
       template_path = TemplatePath.new(scope)
+      puts scope
+      scope.instance_variable_set :@virtual_path, template_path.name
 
-      source = if template_path.is_haml?
-                 Haml::Engine.new(data, HandlebarsAssets::Config.haml_options).render(scope, locals)
-               elsif template_path.is_slim?
-                 Slim::Template.new(HandlebarsAssets::Config.slim_options) { data }.render(scope, locals)
-               else
-                 data
-               end
+      # TODO: I think this could be removed by registering differently (will test in future)
+      source =
+       if template_path.is_haml?
+         Haml::Engine.new(data, HandlebarsAssets::Config.haml_options).render(scope, locals)
+       elsif template_path.is_slim?
+         Slim::Template.new(HandlebarsAssets::Config.slim_options) { data }.render(scope, locals)
+       else
+         data
+       end
 
-      if HandlebarsAssets::Config.ember?
-        "window.Ember.TEMPLATES[#{template_path.name}] = Ember.Handlebars.compile(#{MultiJson.dump source});"
-      else
-        compiled_hbs = Handlebars.precompile(source, HandlebarsAssets::Config.options)
+      template_namespace = HandlebarsAssets::Config.template_namespace
 
-        template_namespace = HandlebarsAssets::Config.template_namespace
+      compiled_hbs = HandlebarsAssets::Handlebars.precompile(source, HandlebarsAssets::Config.options)
 
-        if template_path.is_partial?
-          unindent <<-PARTIAL
-            (function() {
-              Handlebars.registerPartial(#{template_path.name}, Handlebars.template(#{compiled_hbs}));
-            }).call(this);
+      if template_path.is_partial?
+        unindent <<-PARTIAL
+          (function() {
+            Handlebars.registerPartial(#{template_path.name}, Handlebars.template(#{compiled_hbs}));
+          }).call(this);
           PARTIAL
-        else
-          unindent <<-TEMPLATE
-            (function() {
-              this.#{template_namespace} || (this.#{template_namespace} = {});
-              this.#{template_namespace}[#{template_path.name}] = Handlebars.template(#{compiled_hbs});
-              return this.#{template_namespace}[#{template_path.name}];
-            }).call(this);
-          TEMPLATE
-        end
-      end
-    end
-
-    def initialize_engine
-      begin
-        require 'haml'
-      rescue LoadError
-        # haml not available
-      end
-      begin
-        require 'slim'
-      rescue LoadError
-        # slim not available
+      else
+        unindent <<-TEMPLATE
+          (function() {
+            this.#{template_namespace} || (this.#{template_namespace} = {});
+            this.#{template_namespace}[#{template_path.name}] = Handlebars.template(#{compiled_hbs});
+            return this.#{template_namespace}[#{template_path.name}];
+          }).call(this);
+        TEMPLATE
       end
     end
 
@@ -72,6 +59,7 @@ module HandlebarsAssets
 
     def prepare; end
 
+    # TODO: remove this ...
     class TemplatePath
       def initialize(scope)
         self.full_path = scope.pathname

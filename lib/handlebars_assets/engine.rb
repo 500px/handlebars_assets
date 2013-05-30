@@ -1,4 +1,4 @@
-require 'action_view/template/handlers/hbs'
+require 'action_view/template/handlers/handlebars'
 
 module HandlebarsAssets
   class Engine < ::Rails::Engine
@@ -12,11 +12,12 @@ module HandlebarsAssets
 
     initializer "handlebars.register_template_handler" do
       ActiveSupport.on_load(:action_view) do
-        [:hbs, :handlebars].each do |ext|
-          ActionView::Template.register_template_handler(ext, ActionView::Template::Handlers::HBS)
-        end
+        ActionView::Template.register_template_handler(:hbs, ActionView::Template::Handlers::Handlebars)
+        ActionView::Template.register_template_handler(:handlebars, ActionView::Template::Handlers::Handlebars)
+        ActionView::Template.register_template_handler(:hamlbars, ActionView::Template::Handlers::Handlebars) if HandlebarsAssets::Config.haml_available?
+        ActionView::Template.register_template_handler(:slimbars, ActionView::Template::Handlers::Handlebars) if HandlebarsAssets::Config.slim_available?
       end
     end
-    
+
   end
 end
