@@ -34,10 +34,8 @@ module HandlebarsAssets
       end
 
       def apply_patches_to_source
-        if HandlebarsAssets::Config.patch_files.any?
-          HandlebarsAssets::Config.patch_files.each do |patch_file|
-            append_patch(patch_file)
-          end
+        HandlebarsAssets::Config.patch_files.each do |patch_file|
+          append_patch(patch_file)
         end
         source
       end
@@ -57,7 +55,12 @@ module HandlebarsAssets
       end
 
       def runtime_source
+        return @runtime if @runtime
         @runtime ||= runtime_path.read
+        HandlebarsAssets::Config.patch_files.each do |patch_file|
+          @runtime << patch_source(patch_file)
+        end
+        @runtime
       end
 
       def path
