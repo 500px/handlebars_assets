@@ -37,10 +37,9 @@ module HandlebarsAssets
         HandlebarsAssets::Config.patch_files.each do |patch_file|
           append_patch(patch_file)
         end
+        puts "SRC=#{source}"
         source
       end
-
-      private
 
       def source
         @source ||= path.read
@@ -58,8 +57,11 @@ module HandlebarsAssets
         return @runtime if @runtime
         @runtime ||= runtime_path.read
         HandlebarsAssets::Config.patch_files.each do |patch_file|
+          @runtime << "\n;"
           @runtime << patch_source(patch_file)
+          @runtime << "\n;"
         end
+        puts @runtime
         @runtime
       end
 
