@@ -64,6 +64,7 @@ module HandlebarsAssets
       def initialize(scope)
         self.full_path = scope.pathname
         self.template_path = scope.logical_path
+        puts "TEMPLATE NAME: #{name}"
       end
 
       def is_haml?
@@ -79,7 +80,7 @@ module HandlebarsAssets
       end
 
       def name
-        relative_path
+        template_name
       end
 
       private
