@@ -20,20 +20,10 @@ module ActionView
         end
 
         def self.render_template(scope, data, variables, pathname, fullpath)
-          # TODO: you should be able to chain multiple template handlers together here if you want
-          # e.g. HAML + SLIM + ...; not sure about performance implications if any
-          data =
-            if fullpath.end_with? ".hamlbars"
-              Haml::Engine.new(data, HandlebarsAssets::Config.haml_options).render(scope, variables)
-            elsif fullpath.end_with? ".slimbars"
-              Slim::Template.new(HandlebarsAssets::Config.slim_options) { data }.render(scope, variables)
-            else
-             data
-            end
-
-          # TODO: this is almost the exact same code from evaluate in handlebars_assets/tilt_handlebars.rb
-          precompiled_template = HandlebarsAssets::Handlebars.precompile(data)
-          HandlebarsAssets::Handlebars.runtime_context.eval("Handlebars.template(#{precompiled_template})(#{variables.to_json})")
+          # use context here because it will have the preloaded especially in the RAILS case (DEV).
+          $stderr.puts "RENDERING ACTIONVIEW: #{pathname}" # TODO: use sprockets lookup
+          template_namespace = HandlebarsAssets::Config.template_namespace
+          HandlebarsAssets::Handlebars.context.eval("this.#{template_namespace}['#{pathname}'](#{variables.to_json})")
         end
       end
     end

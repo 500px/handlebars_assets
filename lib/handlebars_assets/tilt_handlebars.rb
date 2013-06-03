@@ -38,6 +38,9 @@ module HandlebarsAssets
 
       compiled_hbs = HandlebarsAssets::Handlebars.precompile(source, HandlebarsAssets::Config.options)
 
+      $stderr.puts scoppe.inspect
+      $stderr.puts "SCOPE NAME: #{scope.logical_path}"
+      $stderr.puts "TEMPLATE NAME: #{template_path.name}"
       if template_path.is_partial?
         unindent <<-PARTIAL
           (function() {
@@ -62,9 +65,8 @@ module HandlebarsAssets
     # TODO: remove this ...
     class TemplatePath
       def initialize(scope)
-        self.full_path = scope.pathname
+        self.full_path = scope.pathname.to_path
         self.template_path = scope.logical_path
-        puts "TEMPLATE NAME: #{name}"
       end
 
       def is_haml?
@@ -80,7 +82,7 @@ module HandlebarsAssets
       end
 
       def name
-        template_name
+        full_path.gsub(/^#{HandlebarsAssets::Config.path_prefix}\/(.*)$/i, "\\1")
       end
 
       private

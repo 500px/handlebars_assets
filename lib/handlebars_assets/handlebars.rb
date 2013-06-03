@@ -12,7 +12,8 @@ module HandlebarsAssets
       end
 
       def runtime_context
-        @runtime_context ||= ExecJS.compile("#{runtime_source};")
+        # TODO: disabled memorizing because templates could change ... :(
+        @runtime_context = ExecJS.compile("#{runtime_source};")
       end
 
       def context
@@ -49,15 +50,14 @@ module HandlebarsAssets
       end
 
       def patch_source(patch_file)
-        patch_path.join(patch_file).read
+        Rails.application.assets[patch_file].body
       end
 
       def runtime_source
-        return @runtime if @runtime
-        @runtime ||= runtime_path.read
+        @runtime = runtime_path.read
         HandlebarsAssets::Config.patch_files.each do |patch_file|
           @runtime << "\n;"
-          @runtime << patch_source(patch_file)
+          @runtime << Rails.application.assets[patch_file].body
           @runtime << "\n;"
         end
         @runtime
