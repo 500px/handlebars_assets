@@ -33,6 +33,7 @@ module HandlebarsAssets
          data
        end
 
+
       template_namespace = HandlebarsAssets::Config.template_namespace
 
       compiled_hbs = HandlebarsAssets::Handlebars.precompile(source, HandlebarsAssets::Config.options)
@@ -78,7 +79,7 @@ module HandlebarsAssets
       end
 
       def name
-        template_name
+        relative_path
       end
 
       private
