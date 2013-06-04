@@ -38,13 +38,14 @@ module HandlebarsAssets
 
       compiled_hbs = HandlebarsAssets::Handlebars.precompile(source, HandlebarsAssets::Config.options)
 
-      $stderr.puts scoppe.inspect
-      $stderr.puts "SCOPE NAME: #{scope.logical_path}"
-      $stderr.puts "TEMPLATE NAME: #{template_path.name}"
+      $stderr.puts "HANDLEBARS #{template_namespace}[#{template_path.name}] registered"
       if template_path.is_partial?
         unindent <<-PARTIAL
           (function() {
-            Handlebars.registerPartial(#{template_path.name}, Handlebars.template(#{compiled_hbs}));
+            this.#{template_namespace} || (this.#{template_namespace} = {});
+            this.#{template_namespace}[#{template_path.name}] = Handlebars.template(#{compiled_hbs});
+            Handlebars.registerPartial(#{template_path.name}, this.#{template_namespace}[#{template_path.name}]);
+            return this.#{template_namespace}[#{template_path.name}];
           }).call(this);
           PARTIAL
       else
@@ -82,7 +83,7 @@ module HandlebarsAssets
       end
 
       def name
-        full_path.gsub(/^#{HandlebarsAssets::Config.path_prefix}\/(.*)$/i, "\\1")
+        template_name
       end
 
       private

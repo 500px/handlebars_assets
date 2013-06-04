@@ -11,19 +11,8 @@ module HandlebarsAssets
         context.call('Handlebars.precompile', *args)
       end
 
-      def runtime_context
-        # TODO: disabled memorizing because templates could change ... :(
-        @runtime_context = ExecJS.compile("#{runtime_source};")
-      end
-
       def context
         @context ||= ExecJS.compile(apply_patches_to_source)
-      end
-
-      def render(template, *args)
-        locals = args.last.is_a?(Hash) ? args.pop : {}
-        extra = args.first.to_s
-        context_for(template, extra).call("template", locals.to_json)
       end
 
       protected
