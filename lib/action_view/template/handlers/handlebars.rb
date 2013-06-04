@@ -20,13 +20,12 @@ module ActionView
         end
 
         def self.render_template(scope, data, variables, pathname, fullpath)
-          # use context here because it will have the preloaded especially in the RAILS case (DEV).
-          $stderr.puts "RENDERING ACTIONVIEW: #{pathname}" # TODO: use sprockets lookup
-
           # TODO: application specific tweak for now, makes auto-update of the context when render occurs
-          Rails.application.assets[pathname.to_s] # Auto Update?
+          Rails.application.assets["v3/templates"].fresh? # This will cause an update of ALL changed files...; updating the JS context as needed
 
+          $stderr.puts "RENDERING ACTIONVIEW: #{pathname}" # TODO: use sprockets lookup for pathname?
           template_namespace = HandlebarsAssets::Config.template_namespace
+          # use context here because it will have the preloaded especially in the RAILS case (DEV).
           HandlebarsAssets::Handlebars.context.eval("this.#{template_namespace}['#{pathname}'](#{variables.to_json})")
         end
       end

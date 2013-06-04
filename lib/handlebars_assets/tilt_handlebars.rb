@@ -39,24 +39,28 @@ module HandlebarsAssets
       compiled_hbs = HandlebarsAssets::Handlebars.precompile(source, HandlebarsAssets::Config.options)
 
       $stderr.puts "HANDLEBARS #{template_namespace}[#{template_path.name}] registered"
-      if template_path.is_partial?
-        unindent <<-PARTIAL
-          (function() {
-            this.#{template_namespace} || (this.#{template_namespace} = {});
-            this.#{template_namespace}[#{template_path.name}] = Handlebars.template(#{compiled_hbs});
-            Handlebars.registerPartial(#{template_path.name}, this.#{template_namespace}[#{template_path.name}]);
-            return this.#{template_namespace}[#{template_path.name}];
-          }).call(this);
-          PARTIAL
-      else
-        unindent <<-TEMPLATE
-          (function() {
-            this.#{template_namespace} || (this.#{template_namespace} = {});
-            this.#{template_namespace}[#{template_path.name}] = Handlebars.template(#{compiled_hbs});
-            return this.#{template_namespace}[#{template_path.name}];
-          }).call(this);
-        TEMPLATE
-      end
+      template =
+        if template_path.is_partial?
+          unindent <<-PARTIAL
+            (function() {
+              this.#{template_namespace} || (this.#{template_namespace} = {});
+              this.#{template_namespace}[#{template_path.name}] = Handlebars.template(#{compiled_hbs});
+              Handlebars.registerPartial(#{template_path.name}, this.#{template_namespace}[#{template_path.name}]);
+              return this.#{template_namespace}[#{template_path.name}];
+            }).call(this);
+            PARTIAL
+        else
+          unindent <<-TEMPLATE
+            (function() {
+              this.#{template_namespace} || (this.#{template_namespace} = {});
+              this.#{template_namespace}[#{template_path.name}] = Handlebars.template(#{compiled_hbs});
+              return this.#{template_namespace}[#{template_path.name}];
+            }).call(this);
+          TEMPLATE
+        end
+      HandlebarsAssets::Handlebars.context.exec(template) # make the context have the compiled version
+
+      template
     end
 
     protected

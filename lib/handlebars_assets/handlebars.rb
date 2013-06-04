@@ -12,44 +12,33 @@ module HandlebarsAssets
       end
 
       def context
-        @context ||= ExecJS.compile(apply_patches_to_source)
+        @context ||= ExecJS.compile(source)
       end
 
       protected
 
       attr_writer :source
 
-      def append_patch(patch_file)
-        self.source += patch_source(patch_file)
-      end
-
-      def apply_patches_to_source
-        HandlebarsAssets::Config.patch_files.each do |patch_file|
-          append_patch(patch_file)
-        end
-        source
-      end
-
       def source
-        @source ||= path.read
+        @source = path.read
+        HandlebarsAssets::Config.patch_files.each do |patch_file|
+          # TODO: what happens when a patch file goes stale (e.g. development)
+          @source += Rails.application.assets[patch_file].body
+        end
+        @source
       end
 
       def patch_path
         @patch_path ||= Pathname(HandlebarsAssets::Config.patch_path)
       end
 
-      def patch_source(patch_file)
-        Rails.application.assets[patch_file].body
-      end
-
       def runtime_source
-        @runtime = runtime_path.read
+        return @runtime_source if @runtime_source
+        @runtime_source = runtime_path.read
         HandlebarsAssets::Config.patch_files.each do |patch_file|
-          @runtime << "\n;"
-          @runtime << Rails.application.assets[patch_file].body
-          @runtime << "\n;"
+          @runtime_source += Rails.application.assets[patch_file].body
         end
-        @runtime
+        @runtime_source
       end
 
       def path
